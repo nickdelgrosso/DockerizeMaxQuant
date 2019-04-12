@@ -1,9 +1,12 @@
 import random
 import time
 import sys
+import zipfile
+import shutil
 from os import path
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+
 
 
 url = "https://www.maxquant.org/download_asset/maxquant/latest"
@@ -64,8 +67,14 @@ if not path.exists(path.join(download_dir, download_filename)):
         if path.exists(path.join(download_dir, download_filename)) and not path.exists(path.join(download_dir, download_filename) + '.part'):
             print("...Download Complete.")
             driver.quit()
+
             break
     else:
         raise FileNotFoundError("After 120 seconds, download has not completed. Is this script still working?")
+
+    # Unzip File and copy license into directory
+    with zipfile.ZipFile(path.join(download_dir, download_filename), 'r') as zip_ref:
+        zip_ref.extractall(path.join(download_dir, maxquant_version))
+    shutil.move(path.join(download_dir, 'license.txt'), path.join(download_dir, maxquant_version, 'license.txt'))
 
 sys.exit()
