@@ -8,7 +8,6 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
 
-
 url = "https://www.maxquant.org/download_asset/maxquant/latest"
 download_dir = "W:\\Software\\MAXQUANT Version"
 headless = True
@@ -72,7 +71,7 @@ if not path.exists(path.join(download_dir, download_filename)):
     else:
         raise FileNotFoundError("After 120 seconds, download has not completed. Is this script still working?")
 
-    # Unzip File and copy license into directory
+    # Unzip File and move license into directory
     with zipfile.ZipFile(path.join(download_dir, download_filename), 'r') as zip_ref:
         zip_ref.extractall(path.join(download_dir, maxquant_version))
     shutil.move(path.join(download_dir, 'license.txt'), path.join(download_dir, maxquant_version, 'license.txt'))
