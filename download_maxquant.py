@@ -1,11 +1,15 @@
+import os
 import random
 import time
 import sys
 import zipfile
 import shutil
+import subprocess
 from os import path
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+import docker
+
 
 
 url = "https://www.maxquant.org/download_asset/maxquant/latest"
@@ -72,8 +76,24 @@ if not path.exists(path.join(download_dir, download_filename)):
         raise FileNotFoundError("After 120 seconds, download has not completed. Is this script still working?")
 
     # Unzip File and move license into directory
-    with zipfile.ZipFile(path.join(download_dir, download_filename), 'r') as zip_ref:
-        zip_ref.extractall(path.join(download_dir, maxquant_version))
-    shutil.move(path.join(download_dir, 'license.txt'), path.join(download_dir, maxquant_version, 'license.txt'))
 
-sys.exit()
+    unzipped_path = path.join(download_dir, maxquant_version)
+    print(f"Unzipping download into {unzipped_path}")
+    with zipfile.ZipFile(path.join(download_dir, download_filename), 'r') as zip_ref:
+        zip_ref.extractall(unzipped_path)
+    shutil.move(path.join(download_dir, 'license.txt'), path.join(unzipped_path, 'license.txt'))
+
+
+    # Build a new docker image
+    shutil.rmtree('./maxquant')
+    shutil.copytree(unzipped_path, './maxquant')
+
+    client = docker.from_env()
+    client.login('nickdg')
+    for version in [maxquant_version, 'latest']:
+        docker_tag = f'nickdg/maxquant:{version}'
+        client.images.build(path='.', tag=docker_tag)
+        for line in client.images.push(docker_tag, stream=True):
+            print(line)
+        print(f"Docker image {docker_tag} uploaded successfully.")
+
